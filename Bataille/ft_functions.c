@@ -1,5 +1,10 @@
 #include "ft_functions.h"
 
+void	ft_putchar(char c)
+{
+	write(1, &c, 1);
+}
+
 void	ft_putstr(char *str)
 {
 	int	i;
@@ -10,6 +15,27 @@ void	ft_putstr(char *str)
 		write(1, &str[i], 1);
 		i++;
 	}
+}
+
+void	ft_putnbr(int nb)
+{
+	if (nb == -2147483648)
+	{
+		write(1, "-2147483648", 11);
+		return ;
+	}
+	if (nb < 0)
+	{
+		nb = -nb;
+		write(1, "-", 1);
+	}
+	if (nb < 10)
+	{
+		ft_putchar(nb + '0');
+		return ;
+	}
+	ft_putnbr(nb / 10);
+	ft_putchar(nb % 10 + '0');
 }
 
 char	*ft_strdup(char *src)
@@ -62,7 +88,7 @@ char	*ft_strmemcat(char *first, char *second)
 	return (dest);
 }
 
-char	*ft_set_card_name(char value, char color)
+char	*ft_set_card_name(int value, int color)
 {
 	char	*name = NULL;
 	char	*copy = NULL;	
@@ -149,7 +175,7 @@ char	*ft_set_card_name(char value, char color)
 t_card	*ft_get_unshuffled_deck(void)
 {
 	t_card	*deck;
-	char	cards_count;
+	int		cards_count;
 
 	deck = malloc(sizeof(t_card) * 55);
 	if (deck == NULL)
@@ -211,6 +237,20 @@ void	ft_shuffle_deck(t_card *deck)
 	return ;
 }
 
+void	ft_free_deck(t_card *deck)
+{
+	int	counter;
+
+	counter = 0;
+	while (deck[counter].value)
+	{
+		if (deck[counter].name)
+			free(deck[counter].name);
+		counter++;
+	}
+	free(deck);
+}
+
 t_card	*ft_add_card(t_card card_to_add, t_card *original_deck)
 {
 	t_card	*new_deck;
@@ -219,20 +259,317 @@ t_card	*ft_add_card(t_card card_to_add, t_card *original_deck)
 	counter = 0;
 	while (original_deck[counter].value)
 		counter++;
-	if (!counter)
-		counter++;
 	counter +=2;
 	new_deck = malloc(sizeof(t_card) * counter);
 	counter = 0;
 	while (original_deck[counter].value)
 	{
-		new_deck[counter] = original_deck[counter];
+		new_deck[counter].color = original_deck[counter].color;
+		new_deck[counter].value = original_deck[counter].value;
 		new_deck[counter].name = ft_set_card_name(new_deck[counter].value, new_deck[counter].color);
 		counter++;
 	}
-	new_deck[counter] = card_to_add;
+	new_deck[counter].value = card_to_add.value;
+	new_deck[counter].color = card_to_add.color;
 	new_deck[counter].name = ft_set_card_name(new_deck[counter].value, new_deck[counter].color);
 	counter++;
 	new_deck[counter].value = 0;
+	ft_free_deck(original_deck);
 	return (new_deck);
+}
+
+t_card	*ft_remove_card(int	index_to_del, t_card *original_deck)
+{
+	t_card	*new_deck;
+	int	counter;
+	int	counter2;
+
+	counter = 0;
+	while (original_deck[counter].value)
+		counter++;
+	new_deck = malloc(sizeof(t_card) * counter);
+	counter = 0;
+	counter2 = 0;
+	while (original_deck[counter].value)
+	{
+		if (counter != index_to_del)
+		{
+			new_deck[counter2].value = original_deck[counter].value;
+			new_deck[counter2].color = original_deck[counter].color;
+			new_deck[counter2].name = ft_set_card_name(new_deck[counter2].value, new_deck[counter2].color);
+			counter2++;
+		}
+		counter++;
+	}
+	new_deck[counter2].value = 0;
+	ft_free_deck(original_deck);
+	return (new_deck);
+}
+
+t_card	**ft_distribute(char players_nb, int hand_size, t_card *pile)
+{
+	int		counter;
+	t_card	**decks_tab;
+	t_card	*tmp;
+
+	counter = 0;
+	while (pile[counter].value)
+		counter++;
+	if (players_nb * hand_size > counter || players_nb < 1 || hand_size < 1)
+		return (NULL);
+	decks_tab = malloc(sizeof(t_card *) * (players_nb + 1));
+	counter = 0;
+	while (counter < players_nb)
+	{
+		decks_tab[counter] = malloc(sizeof(t_card));
+		decks_tab[counter][0].value = 0;
+		counter++;
+	}
+	decks_tab[counter] = malloc(sizeof(t_card));
+	decks_tab[counter][0].value = 42;
+	counter = 0;
+	while (counter < hand_size * players_nb)
+	{
+		tmp = ft_add_card(pile[0], decks_tab[counter % players_nb]);
+		decks_tab[counter % players_nb] = tmp;
+		tmp = ft_remove_card(0, pile);
+		pile = tmp;
+		counter++;
+	}
+	if (!(pile[0].value))
+		ft_free_deck(pile);
+	return (decks_tab);
+}
+
+void	ft_free_decks_tab(t_card **decks_tab)
+{
+	int	counter;
+
+	counter = 0;
+	while (decks_tab[counter][0].value != 42)
+	{
+		ft_free_deck(decks_tab[counter]);
+		counter++;
+	}
+	free(decks_tab[counter]);
+	free(decks_tab);
+}
+
+int		ft_compare_cards(t_card **decks_tab, int index, int *to_compare)
+{
+	int	max;
+	int	count;
+	int	count2;
+	int	winner;
+
+	max = 0;
+	winner = 0;
+	while (decks_tab[max][0].value != 42)
+		max++;
+	count = 0;
+	while (count < max)
+	{
+		count2 = 0;
+		while (to_compare[count2] != -1)
+		{
+			if (to_compare[count2] == count)
+				break;
+			count2++;
+		}
+		if (to_compare[count2] == -1)
+		{
+			count++;
+			continue;
+		}
+		if (decks_tab[winner][index].value < decks_tab[count][index].value)
+			winner = count;
+		count++;
+	}
+	return (winner);
+}
+
+t_card	**ft_copy_decks_tab(t_card **original_decks_tab)
+{
+	t_card	**new_decks_tab;
+	t_card	*new_deck;
+	int	decks_count;
+	int	cards_count;
+
+	decks_count = 0;
+	while (original_decks_tab[decks_count][0].value != 42)
+		decks_count++;
+	new_decks_tab = malloc(sizeof(t_card *) * (decks_count + 1));
+	new_deck = malloc(sizeof(t_card) * 1);
+	new_deck[0].value = 42;
+	new_decks_tab[decks_count] = new_deck;
+	decks_count = 0;
+	while (original_decks_tab[decks_count][0].value != 42)
+	{
+		cards_count = 0;
+		while (original_decks_tab[decks_count][cards_count].value)
+			cards_count++;
+		new_deck = malloc(sizeof(t_card) * (cards_count + 1));
+		new_deck[cards_count].value = 0;
+		cards_count = 0;
+		while (original_decks_tab[decks_count][cards_count].value)
+		{
+			new_deck[cards_count].value = original_decks_tab[decks_count][cards_count].value;
+			new_deck[cards_count].color = original_decks_tab[decks_count][cards_count].color;
+			new_deck[cards_count].name = ft_set_card_name(new_deck[cards_count].value, new_deck[cards_count].color);
+			cards_count++;
+		}
+		new_decks_tab[decks_count] = new_deck;
+		decks_count++;
+	}
+	return (new_decks_tab);
+}
+
+t_card	**ft_win_hand(t_card **decks_tab)
+{
+	int		*winners_tab;
+	int		*tmp_int_tab;
+	t_card	**new_decks_tab;
+	t_card	*tmp;
+	t_card	*played_cards;
+	int		count;
+	int		winner;
+
+	new_decks_tab = ft_copy_decks_tab(decks_tab);
+	count = 0;
+	while (decks_tab[count][0].value != 42)
+		count++;
+	winners_tab = malloc(sizeof(int) * (count + 1));
+	winners_tab[count] = -1;
+	while (count > 0)
+	{
+		count--;
+		winners_tab[count] = count;
+	}
+	count = ft_compare_cards(new_decks_tab, 0, winners_tab);
+	free(winners_tab);
+	winners_tab = ft_winners_tab(0, count, decks_tab);
+	count = 0;
+	winner = 0;
+	while (winners_tab[count] != -1)
+		count++;
+	if (count < 2)
+	{
+		count = 0;
+		while (decks_tab[count][0].value != 42)
+		{
+			if (count != winners_tab[0] && decks_tab[count][0].value)
+			{
+				tmp = ft_add_card(decks_tab[count][0], new_decks_tab[winners_tab[0]]);
+				new_decks_tab[winners_tab[0]] = tmp;
+				tmp = ft_remove_card(0, new_decks_tab[count]);
+				new_decks_tab[count] = tmp;
+			}
+			count++;
+		}
+		tmp = ft_add_card(new_decks_tab[winners_tab[0]][0], new_decks_tab[winners_tab[0]]);
+		new_decks_tab[winners_tab[0]] = tmp;
+		tmp = ft_remove_card(0, new_decks_tab[winners_tab[0]]);
+		new_decks_tab[winners_tab[0]] = tmp;
+	}
+	else
+	{
+		played_cards = malloc(sizeof(t_card));
+		played_cards[0].value = 0;
+		count = 0;
+		while (new_decks_tab[count][0].value != 42)
+		{
+			if (new_decks_tab[count][0].value)
+			{
+				played_cards = ft_add_card(new_decks_tab[count][0], played_cards);
+				tmp = ft_remove_card(0, new_decks_tab[count]);
+				new_decks_tab[count] = tmp;
+			}
+			count++;
+		}
+		while (winners_tab[1] != -1 )
+		{
+			count = 0;
+			while (winners_tab[count] != -1)
+			{
+				if (new_decks_tab[winners_tab[count]][0].value == 0 || new_decks_tab[winners_tab[count]][1].value == 0)
+				{
+					if (new_decks_tab[winners_tab[count]][0].value)
+					{
+						played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+						tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+						new_decks_tab[winners_tab[count]] = tmp;
+					}
+					count++;
+					continue;
+				}
+				played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+				tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+				new_decks_tab[winners_tab[count]] = tmp;
+				count++;
+			}
+			tmp_int_tab = ft_winners_tab(0, ft_compare_cards(new_decks_tab, 0, winners_tab), new_decks_tab);
+			count = 0;
+			while (winners_tab[count] != -1)
+			{
+				if (!(new_decks_tab[winners_tab[count]][0].value) || !(new_decks_tab[winners_tab[count]][1].value))
+				{
+					if (new_decks_tab[winners_tab[count]][0].value)
+					{
+						played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+						tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+						new_decks_tab[winners_tab[count]] = tmp;
+					}
+					continue;
+				}
+				played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+				tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+				new_decks_tab[winners_tab[count]] = tmp;
+				count++;
+			}
+			free(winners_tab);
+			winners_tab = tmp_int_tab;
+		}
+		winner = winners_tab[0];
+		while (played_cards[0].value)
+		{
+			tmp = ft_add_card(played_cards[0], new_decks_tab[winner]);
+			new_decks_tab[winner] = tmp;
+			tmp = ft_remove_card(0, played_cards);
+			played_cards = tmp;
+		}
+		free(played_cards);
+	}
+	free(winners_tab);
+	ft_free_decks_tab(decks_tab);
+	return (new_decks_tab);
+}
+
+int		*ft_winners_tab(int index, int winner, t_card **decks_tab)
+{
+	int	*winners_tab;
+	int counter;
+	int	winners_count;
+
+	counter = 0;
+	winners_count = 0;
+	while (decks_tab[counter][0].value != 42)
+	{
+		if (decks_tab[counter][index].value == decks_tab[winner][index].value)
+			winners_count++;
+		counter++;
+	}
+	winners_tab = malloc(sizeof(int) * (winners_count + 1));
+	winners_tab[winners_count] = -1;
+	counter = 0;
+	winners_count = 0;
+	while (decks_tab[counter][0].value != 42)
+	{
+		if (decks_tab[counter][index].value == decks_tab[winner][index].value)
+		{
+			winners_tab[winners_count] = counter;
+			winners_count++;
+		}
+		counter++;
+	}
+	return (winners_tab);
 }
