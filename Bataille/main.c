@@ -27,6 +27,7 @@ int	main(void)
 		}
 		decks_count++;
 	}
+	write(1, "\n", 1);
 	ft_putstr("Now let's see the decks after a hand is played\n\n");
 	decks_tab = ft_win_hand(decks_tab);
 	decks_count = 0;
