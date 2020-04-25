@@ -31,5 +31,7 @@ int		ft_compare_cards(t_card **decks_tab, int index, int *to_compare);
 t_card	**ft_copy_decks_tab(t_card **original_decks_tab);
 t_card	**ft_win_hand(t_card **decks_tab);
 int		*ft_winners_tab(int index, int winner, t_card **decks_tab);
+int		ft_decklen(t_card *deck);
+int		ft_players_left(t_card **decks_tab);
 
 #endif

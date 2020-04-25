@@ -234,13 +234,12 @@ void	ft_shuffle_deck(t_card *deck)
 		counter++;
 	if (!counter)
 		return ;
-	counter--;
 	size = counter;
-	while (counter >= 0)
+	while (counter > 0)
 	{
 		random = (rand() % size);
-		copy = deck[counter];
-		deck[counter] = deck[random];
+		copy = deck[counter - 1];
+		deck[counter - 1] = deck[random];
 		deck[random] = copy;
 		counter--;
 	}
@@ -446,8 +445,15 @@ t_card	**ft_win_hand(t_card **decks_tab)
 
 	new_decks_tab = ft_copy_decks_tab(decks_tab);
 	count = 0;
-	while (decks_tab[count][0].value != 42)
+	while (new_decks_tab[count][0].value != 42)
+	{
+		ft_putnbr(ft_decklen(new_decks_tab[count]));
+		ft_putstr(" cards left");
 		count++;
+		if (new_decks_tab[count][0].value != 42)
+			ft_putstr("      	      ");
+	}
+	ft_putstr("\n\n\n");
 	winners_tab = malloc(sizeof(int) * (count + 1));
 	winners_tab[count] = -1;
 	while (count > 0)
@@ -458,92 +464,132 @@ t_card	**ft_win_hand(t_card **decks_tab)
 	count = ft_compare_cards(new_decks_tab, 0, winners_tab);
 	free(winners_tab);
 	winners_tab = ft_winners_tab(0, count, decks_tab);
+	played_cards = malloc(sizeof(t_card));
+	played_cards[0].value = 0;
 	count = 0;
-	winner = 0;
-	while (winners_tab[count] != -1)
+	while (new_decks_tab[count][0].value != 42)
+	{
+		if (new_decks_tab[count][0].value)
+		{
+			ft_putstr(new_decks_tab[count][0].name);
+			if (new_decks_tab[count+1][0].value != 42 && new_decks_tab[count+1][0].value)
+			{
+				winner = 0;
+				while (winner < 21 - ft_strlen(new_decks_tab[count][0].name))
+				{
+					write(1, " ", 1);
+					winner++;
+				}
+				ft_putstr("VS");
+				winner = 0;
+				while (winner < 21 - ft_strlen(new_decks_tab[count+1][0].name))
+				{
+					write(1, " ", 1);
+					winner++;
+				}
+			}
+			played_cards = ft_add_card(new_decks_tab[count][0], played_cards);
+			tmp = ft_remove_card(0, new_decks_tab[count]);
+			new_decks_tab[count] = tmp;
+		}
 		count++;
-	if (count < 2)
-	{
-		count = 0;
-		while (decks_tab[count][0].value != 42)
-		{
-			if (count != winners_tab[0] && decks_tab[count][0].value)
-			{
-				tmp = ft_add_card(decks_tab[count][0], new_decks_tab[winners_tab[0]]);
-				new_decks_tab[winners_tab[0]] = tmp;
-				tmp = ft_remove_card(0, new_decks_tab[count]);
-				new_decks_tab[count] = tmp;
-			}
-			count++;
-		}
-		tmp = ft_add_card(new_decks_tab[winners_tab[0]][0], new_decks_tab[winners_tab[0]]);
-		new_decks_tab[winners_tab[0]] = tmp;
-		tmp = ft_remove_card(0, new_decks_tab[winners_tab[0]]);
-		new_decks_tab[winners_tab[0]] = tmp;
 	}
-	else
+	ft_putchar('\n');
+	while (winners_tab[1] != -1 )
 	{
-		played_cards = malloc(sizeof(t_card));
-		played_cards[0].value = 0;
 		count = 0;
-		while (new_decks_tab[count][0].value != 42)
+		ft_putstr("\n                   BATTLE !!!\n");
+		while (winners_tab[count] != -1)
 		{
-			if (new_decks_tab[count][0].value)
+			if (new_decks_tab[winners_tab[count]][0].value == 0 || new_decks_tab[winners_tab[count]][1].value == 0)
 			{
-				played_cards = ft_add_card(new_decks_tab[count][0], played_cards);
-				tmp = ft_remove_card(0, new_decks_tab[count]);
-				new_decks_tab[count] = tmp;
+				if (new_decks_tab[winners_tab[count]][0].value)
+				{
+					ft_putstr("Player ");
+					ft_putnbr((winners_tab[count]) + 1);
+					ft_putstr(" puts his last card, face down, into the hand before continuing\n");
+					played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+					tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+					new_decks_tab[winners_tab[count]] = tmp;
+				}
+				else
+				{
+					ft_putstr("Player ");
+					ft_putnbr((winners_tab[count]) + 1);
+					ft_putstr(" has no card left to continue the battle\n");
+				}
+				count++;
+				continue;
 			}
+			ft_putstr("Player ");
+			ft_putnbr((winners_tab[count]) + 1);
+			ft_putstr(" puts a card, face down, into the hand before continuing\n");
+			played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+			tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+			new_decks_tab[winners_tab[count]] = tmp;
 			count++;
 		}
-		while (winners_tab[1] != -1 )
+		tmp_int_tab = ft_winners_tab(0, ft_compare_cards(new_decks_tab, 0, winners_tab), new_decks_tab);
+		count = 0;
+		ft_putchar('\n');
+		while (winners_tab[count] != -1)
 		{
-			count = 0;
-			while (winners_tab[count] != -1)
+			if (new_decks_tab[winners_tab[count]][0].value == 0)
 			{
-				if (new_decks_tab[winners_tab[count]][0].value == 0 || new_decks_tab[winners_tab[count]][1].value == 0)
+				ft_putstr("Player ");
+				ft_putnbr((winners_tab[count]) + 1);
+				ft_putstr(" ran out of cards");
+				count++;
+				continue;
+			}
+			winner = ft_players_left(new_decks_tab);
+			if (winner > 1)
+			{
+				ft_putstr(new_decks_tab[count][0].name);
+				if (new_decks_tab[count+1][0].value != 42 && new_decks_tab[count+1][0].value)
 				{
-					if (new_decks_tab[winners_tab[count]][0].value)
+					winner = 0;
+					while (winner < 21 - ft_strlen(new_decks_tab[count][0].name))
 					{
-						played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
-						tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
-						new_decks_tab[winners_tab[count]] = tmp;
+						write(1, " ", 1);
+						winner++;
 					}
-					count++;
-					continue;
+					ft_putstr("VS");
+					winner = 0;
+					while (winner < 21 - ft_strlen(new_decks_tab[count+1][0].name))
+					{
+						write(1, " ", 1);
+						winner++;
+					}
 				}
-				played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
-				tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
-				new_decks_tab[winners_tab[count]] = tmp;
-				count++;
 			}
-			tmp_int_tab = ft_winners_tab(0, ft_compare_cards(new_decks_tab, 0, winners_tab), new_decks_tab);
-			count = 0;
-			while (winners_tab[count] != -1)
-			{
-				if (new_decks_tab[winners_tab[count]][0].value == 0)
-				{
-					count++;
-					continue;
-				}
-				played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
-				tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
-				new_decks_tab[winners_tab[count]] = tmp;
-				count++;
-			}
-			free(winners_tab);
-			winners_tab = tmp_int_tab;
+			played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
+			tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
+			new_decks_tab[winners_tab[count]] = tmp;
+			count++;
 		}
-		winner = winners_tab[0];
-		while (played_cards[0].value)
-		{
-			tmp = ft_add_card(played_cards[0], new_decks_tab[winner]);
-			new_decks_tab[winner] = tmp;
-			tmp = ft_remove_card(0, played_cards);
-			played_cards = tmp;
-		}
-		free(played_cards);
+		ft_putchar('\n');
+		free(winners_tab);
+		winners_tab = tmp_int_tab;
 	}
+	winner = winners_tab[0];
+	ft_putstr("\n\nPlayer ");
+	ft_putnbr(winner+1);
+	ft_putstr(" won this hand.\n\nThe hand was composed of the following ");
+	ft_putnbr(ft_decklen(played_cards));
+	ft_putstr(" cards :\n");
+	ft_shuffle_deck(played_cards);
+	while (played_cards[0].value)
+	{
+		ft_putstr(played_cards[0].name);
+		write(1, "\n", 1);
+		tmp = ft_add_card(played_cards[0], new_decks_tab[winner]);
+		new_decks_tab[winner] = tmp;
+		tmp = ft_remove_card(0, played_cards);
+		played_cards = tmp;
+	}
+	write(1, "\n\n\n\n\n", 5);
+	free(played_cards);
 	free(winners_tab);
 	ft_free_decks_tab(decks_tab);
 	return (new_decks_tab);
@@ -577,4 +623,30 @@ int		*ft_winners_tab(int index, int winner, t_card **decks_tab)
 		counter++;
 	}
 	return (winners_tab);
+}
+
+int		ft_decklen(t_card *deck)
+{
+	int	i;
+
+	i = 0;
+	while (deck[i].value)
+		i++;
+	return (i);
+}
+
+int		ft_players_left(t_card **decks_tab)
+{
+	int	i;
+	int	players;
+
+	i = 0;
+	players = 0;
+	while (decks_tab[i][0].value != 42)
+	{
+		if (decks_tab[i][0].value)
+			players++;
+		i++;
+	}
+	return (players);
 }
