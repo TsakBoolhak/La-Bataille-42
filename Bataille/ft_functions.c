@@ -38,6 +38,16 @@ void	ft_putnbr(int nb)
 	ft_putchar(nb % 10 + '0');
 }
 
+int		ft_strlen(char *str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+		i++;
+	return (i);
+}
+
 char	*ft_strdup(char *src)
 {
 	int	i;
@@ -511,14 +521,9 @@ t_card	**ft_win_hand(t_card **decks_tab)
 			count = 0;
 			while (winners_tab[count] != -1)
 			{
-				if (!(new_decks_tab[winners_tab[count]][0].value) || !(new_decks_tab[winners_tab[count]][1].value))
+				if (new_decks_tab[winners_tab[count]][0].value == 0)
 				{
-					if (new_decks_tab[winners_tab[count]][0].value)
-					{
-						played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
-						tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
-						new_decks_tab[winners_tab[count]] = tmp;
-					}
+					count++;
 					continue;
 				}
 				played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);

@@ -16,6 +16,7 @@ typedef struct	s_card
 void	ft_putchar(char c);
 void	ft_putstr(char *);
 void	ft_putnbr(int nb);
+int		ft_strlen(char *str);
 char	*ft_strdup(char *src);
 char	*ft_strmemcat(char *first, char *second);
 char	*ft_set_card_name(int value, int color);
