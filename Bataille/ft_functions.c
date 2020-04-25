@@ -442,6 +442,7 @@ t_card	**ft_win_hand(t_card **decks_tab)
 	t_card	*played_cards;
 	int		count;
 	int		winner;
+	int		players;
 
 	new_decks_tab = ft_copy_decks_tab(decks_tab);
 	count = 0;
@@ -532,6 +533,7 @@ t_card	**ft_win_hand(t_card **decks_tab)
 		tmp_int_tab = ft_winners_tab(0, ft_compare_cards(new_decks_tab, 0, winners_tab), new_decks_tab);
 		count = 0;
 		ft_putchar('\n');
+		players = ft_players_left(new_decks_tab);
 		while (winners_tab[count] != -1)
 		{
 			if (new_decks_tab[winners_tab[count]][0].value == 0)
@@ -542,8 +544,7 @@ t_card	**ft_win_hand(t_card **decks_tab)
 				count++;
 				continue;
 			}
-			winner = ft_players_left(new_decks_tab);
-			if (winner > 1)
+			if (players > 1)
 			{
 				ft_putstr(new_decks_tab[count][0].name);
 				if (new_decks_tab[count+1][0].value != 42 && new_decks_tab[count+1][0].value)
@@ -563,6 +564,7 @@ t_card	**ft_win_hand(t_card **decks_tab)
 					}
 				}
 			}
+			players = ft_players_left(new_decks_tab);
 			played_cards = ft_add_card(new_decks_tab[winners_tab[count]][0], played_cards);
 			tmp = ft_remove_card(0, new_decks_tab[winners_tab[count]]);
 			new_decks_tab[winners_tab[count]] = tmp;
