@@ -20,19 +20,20 @@ void	game(s_card *player1, s_card *player2);
 void	add_card_top(s_card card, s_card *deck);
 void	add_card_bot(s_card *table, s_card *deck);
 void	remove_card(s_card *deck, int removed_card);
+int		ft_decklen(s_card *deck);
 
 int	main(void)
 {
 		//SETTINGS
 	int	debugg;
-	int	i;
+	//int	i;
 	s_card	*deck;
 	s_card	*player1;
 	s_card	*player2;
 	srand(time(NULL));
 
 	debugg = 0; 
-	i = 0;
+	//i = 0;
 	deck = get_deck();
 	player1 = malloc(sizeof(s_card)*55);
 	player2 = malloc(sizeof(s_card)*55);
@@ -46,6 +47,8 @@ int	main(void)
 		print_carddeck(player1, 55);
 		print_carddeck(player2, 55);
 	}
+	free(player1);
+	free(player2);
 	return(0);
 }
 
@@ -92,11 +95,14 @@ void	print_carddeck(s_card *deck, int size)
 	int	i;
 
 	i = 0;
-	printf("\n##########\n");
+	printf("##########\n");
 	while(i < size)
 	{
-		print_card(deck[i]);
-		printf("\n");
+	//	if (deck[i].value > 1 && deck[i].value != 42)
+	//	{
+			print_card(deck[i]);
+			printf("\n");
+	//	}
 		i++;
 	}
 }
@@ -107,7 +113,7 @@ s_card	*get_deck(void)
 	int	j;
 	s_card	*deck;
 
-	deck = malloc(sizeof(s_card)*54);
+	deck = malloc(sizeof(s_card)*55);
 	i = 0;
 	j = 2;
 	while(i < 52)
@@ -157,7 +163,7 @@ void	shuffle_cards(s_card *tab, int size)
 
 void	card_division(s_card *deck, s_card *player1, s_card *player2)
 {
-	int	deck_counter;
+	//int	deck_counter;
 	int	p1_counter;
 	int	p2_counter;
 	int	i;
@@ -168,9 +174,15 @@ void	card_division(s_card *deck, s_card *player1, s_card *player2)
 	while(i < 54)
 	{
 		if (i % 2 == 0)
-			player1[p1_counter++] = deck[i];
+		{
+			player1[p1_counter] = deck[i];
+			p1_counter++;
+		}
 		else
-			player2[p2_counter++] = deck[i];
+		{
+			player2[p2_counter] = deck[i];
+			p2_counter++;
+		}
 		i++;
 	}
 	player1[p1_counter].value = 42;
@@ -179,15 +191,15 @@ void	card_division(s_card *deck, s_card *player1, s_card *player2)
 
 void	game(s_card *player1, s_card *player2)
 {
-	int	i;
-	int	j;
+	//int	i;
+	//int	j;
 	s_card	*table;
 
-	i = 0;
-	j = 0;
+	//i = 0;
+	//j = 0;
 	table = malloc(sizeof(s_card)*55);
 	table[0].value = 42;
-	while(player1[0].value != 42 && player2[0].value != 42)
+	while (player1[0].value != 42 && player2[0].value != 42)
 	{
 		print_card(player1[0]);
 		printf(" vs ");
@@ -195,19 +207,30 @@ void	game(s_card *player1, s_card *player2)
 		printf(": ");
 		add_card_top(player1[0], table);
 		add_card_top(player2[0], table);
-		if(player1[0].value <= player2[0].value)
+		shuffle_cards(table, 2);
+		if(player1[0].value < player2[0].value)
 		{
 			add_card_bot(table, player2);
-			printf("player2 win\n\n");
+			printf("player2 win\n");
 		}
+		/*else if(player1[0].value == player2[0].value)
+		{
+			remove_card(player1, 0);
+			add_card_top(player1[0], table);
+			remove_card(player2, 0);
+			add_card_top(player2[0], table);
+			add_card_bot(table, player2);
+			printf("player2 win\n");
+		}*/
 		else
 		{
 			add_card_bot(table, player1);
-			printf("player1 win\n\n");
+			printf("player1 win\n");
 		}
 		remove_card(player1, 0);
 		remove_card(player2, 0);
 		print_carddeck(player2, 55);
+		printf("Player 1 has %d cards left, Player 2 has %d cards left\n\n", ft_decklen(player1), ft_decklen(player2));
 		while(table[0].value != 42)
 			remove_card(table, 0);
 	}
@@ -215,6 +238,17 @@ void	game(s_card *player1, s_card *player2)
 		printf("player1 win\n");
 	else
 		printf("player2 win\n");
+	free(table);
+}
+
+int		ft_decklen(s_card *deck)
+{
+	int	i;
+
+	i = 0;
+	while (deck[i].value != 42)
+		i++;
+	return (i);
 }
 
 void	add_card_top(s_card card, s_card *deck)
@@ -226,19 +260,21 @@ void	add_card_top(s_card card, s_card *deck)
 	i = 1;
 	j = 0;
 	cpy_deck = malloc(sizeof(s_card)*55);
-	while(deck[j - 1].value != 42)
+	while(deck[j].value != 42)
 	{
-		cpy_deck[j] = deck[j];
+		cpy_deck[i + j] = deck[j];
 		j++;
 	}
+	cpy_deck[i + j].value = 42; 
+	cpy_deck[0] = card;
 	j = 0;
-	while(cpy_deck[j - 1].value != 42)
+	while(cpy_deck[j].value != 42)
 	{
-		deck[i] = cpy_deck[j];
-		i++;
+		deck[j] = cpy_deck[j];
 		j++;
 	}
-	deck[0] = card;
+	deck[j] = cpy_deck[j];
+	free(cpy_deck);
 }
 
 
@@ -246,7 +282,6 @@ void	add_card_bot(s_card *table, s_card *deck)
 {
 	int	i;
 	int	j;
-	s_card	cpy;
 
 	i = 0;
 	j = 0;
@@ -254,12 +289,11 @@ void	add_card_bot(s_card *table, s_card *deck)
 		i++;
 	while(table[j].value != 42)
 	{
-		cpy = deck[i];
 		deck[i] = table[j];
-		deck[i + 1] = cpy;
 		i++;
 		j++;
 	}
+	deck[i].value = 42;
 }
 
 void	remove_card(s_card *deck, int removed_card)
